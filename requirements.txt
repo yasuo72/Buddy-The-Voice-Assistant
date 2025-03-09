@@ -1,0 +1,9 @@
+flask==2.0.1
+pyttsx3==2.90
+requests==2.26.0
+SpeechRecognition==3.8.1
+keyboard==0.13.5
+python-decouple==3.4
+PyAudio==0.2.11
+Werkzeug==2.0.1
+python-dotenv==0.19.0 

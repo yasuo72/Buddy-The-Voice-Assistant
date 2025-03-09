@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J.A.R.V.I.S</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .jarvis-bg {
+            background: linear-gradient(135deg, #000428, #004e92);
+        }
+        .voice-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(0, 78, 146, 0.3);
+            border: 2px solid #00a8ff;
+            animation: pulse 2s infinite;
+            position: relative;
+            cursor: pointer;
+        }
+        .voice-circle::before {
+            content: '';
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(0, 168, 255, 0.1);
+            border: 2px solid #00a8ff;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .voice-circle::after {
+            content: '';
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: rgba(0, 168, 255, 0.2);
+            border: 2px solid #00a8ff;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 168, 255, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 20px rgba(0, 168, 255, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 168, 255, 0);
+            }
+        }
+        .listening .voice-circle {
+            animation: pulse 1s infinite;
+            background: rgba(0, 255, 0, 0.2);
+            border-color: #00ff00;
+        }
+        .listening .voice-circle::before,
+        .listening .voice-circle::after {
+            border-color: #00ff00;
+        }
+        .command-list {
+            background: rgba(0, 78, 146, 0.1);
+            border: 1px solid rgba(0, 168, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        .response-area {
+            background: rgba(0, 78, 146, 0.1);
+            border: 1px solid rgba(0, 168, 255, 0.3);
+            backdrop-filter: blur(10px);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .response-item {
+            border-left: 3px solid #00a8ff;
+            background: rgba(0, 168, 255, 0.1);
+            margin: 10px 0;
+            padding: 10px;
+        }
+        .visualizer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2px;
+            height: 60px;
+        }
+        .visualizer-bar {
+            width: 3px;
+            background: #00a8ff;
+            height: 3px;
+            transition: height 0.1s ease;
+        }
+        .listening .visualizer-bar {
+            animation: soundBars 0.5s infinite;
+        }
+        @keyframes soundBars {
+            0% { height: 3px; }
+            50% { height: 20px; }
+            100% { height: 3px; }
+        }
+    </style>
+</head>
+<body class="min-h-screen jarvis-bg">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-6xl mx-auto">
+            <h1 class="text-4xl font-bold text-center mb-8 text-blue-400">J.A.R.V.I.S</h1>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column: Available Commands -->
+                <div class="command-list rounded-lg p-6">
+                    <h2 class="text-2xl font-semibold mb-4 text-blue-400">Voice Commands</h2>
+                    <div class="space-y-4">
+                        <div class="command-group">
+                            <h3 class="text-lg font-semibold text-blue-400 mb-2">General</h3>
+                            <ul class="space-y-2 text-sm text-gray-300">
+                                <li><span class="text-blue-400">→</span> "how are you"</li>
+                                <li><span class="text-blue-400">→</span> "current time"</li>
+                                <li><span class="text-blue-400">→</span> "battery status"</li>
+                                <li><span class="text-blue-400">→</span> "ip address"</li>
+                            </ul>
+                        </div>
+                        <div class="command-group mt-4">
+                            <h3 class="text-lg font-semibold text-blue-400 mb-2">Applications</h3>
+                            <ul class="space-y-2 text-sm text-gray-300">
+                                <li><span class="text-blue-400">→</span> "open command prompt"</li>
+                                <li><span class="text-blue-400">→</span> "open camera"</li>
+                                <li><span class="text-blue-400">→</span> "open notepad"</li>
+                                <li><span class="text-blue-400">→</span> "open discord"</li>
+                                <li><span class="text-blue-400">→</span> "open vs code"</li>
+                            </ul>
+                        </div>
+                        <div class="command-group mt-4">
+                            <h3 class="text-lg font-semibold text-blue-400 mb-2">Web & Search</h3>
+                            <ul class="space-y-2 text-sm text-gray-300">
+                                <li><span class="text-blue-400">→</span> "youtube"</li>
+                                <li><span class="text-blue-400">→</span> "open google"</li>
+                                <li><span class="text-blue-400">→</span> "wikipedia"</li>
+                                <li><span class="text-blue-400">→</span> "give me news"</li>
+                            </ul>
+                        </div>
+                        <div class="command-group mt-4">
+                            <h3 class="text-lg font-semibold text-blue-400 mb-2">Tools & Utilities</h3>
+                            <ul class="space-y-2 text-sm text-gray-300">
+                                <li><span class="text-blue-400">→</span> "weather"</li>
+                                <li><span class="text-blue-400">→</span> "send email"</li>
+                                <li><span class="text-blue-400">→</span> "set reminder"</li>
+                                <li><span class="text-blue-400">→</span> "generate password"</li>
+                            </ul>
+                        </div>
+                        <div class="command-group mt-4">
+                            <h3 class="text-lg font-semibold text-blue-400 mb-2">Finance</h3>
+                            <ul class="space-y-2 text-sm text-gray-300">
+                                <li><span class="text-blue-400">→</span> "stock price"</li>
+                                <li><span class="text-blue-400">→</span> "crypto price"</li>
+                                <li><span class="text-blue-400">→</span> "exchange rate"</li>
+                            </ul>
+                        </div>
+                        <div class="command-group mt-4">
+                            <h3 class="text-lg font-semibold text-blue-400 mb-2">AI Chat</h3>
+                            <ul class="space-y-2 text-sm text-gray-300">
+                                <li><span class="text-blue-400">→</span> "ask gpt"</li>
+                                <li><span class="text-blue-400">→</span> "ask to ai"</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Middle and Right Columns -->
+                <div class="lg:col-span-2">
+                    <!-- Voice Control Section -->
+                    <div class="flex flex-col items-center justify-center mb-8">
+                        <div id="voiceControl" class="voice-circle flex items-center justify-center">
+                            <i class="fas fa-microphone text-4xl text-blue-400"></i>
+                            <div class="visualizer absolute bottom-0 w-full">
+                                <div class="visualizer-bar"></div>
+                                <div class="visualizer-bar"></div>
+                                <div class="visualizer-bar"></div>
+                                <div class="visualizer-bar"></div>
+                                <div class="visualizer-bar"></div>
+                            </div>
+                        </div>
+                        <p id="status" class="mt-4 text-blue-400 text-lg">Click to activate voice control</p>
+                    </div>
+
+                    <!-- Response Section -->
+                    <div class="response-area rounded-lg p-6">
+                        <h2 class="text-2xl font-semibold mb-4 text-blue-400">System Response</h2>
+                        <div id="responseArea" class="space-y-4">
+                            <!-- Responses will be added here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Text-to-speech function
+        function playTextToSpeech(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        let isListening = false;
+        const voiceControl = document.getElementById('voiceControl');
+        const status = document.getElementById('status');
+        const responseArea = document.getElementById('responseArea');
+        let recognitionTimeout;
+
+        // Initialize with greeting
+        window.initialGreetings = JSON.parse('{{ initial_greeting|tojson|safe }}');
+        if (window.initialGreetings && Array.isArray(window.initialGreetings)) {
+            window.initialGreetings.forEach(message => addResponse(message));
+        }
+
+        function addResponse(message, isUser = false) {
+            const responseDiv = document.createElement('div');
+            responseDiv.className = 'response-item';
+            
+            const escapedMessage = message
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+
+            responseDiv.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <i class="fas ${isUser ? 'fa-user' : 'fa-robot'} text-blue-400"></i>
+                    <div class="flex-1">
+                        <p class="text-sm text-blue-400">${isUser ? 'You' : 'J.A.R.V.I.S'}</p>
+                        <p class="text-gray-300">${escapedMessage}</p>
+                    </div>
+                </div>
+            `;
+            responseArea.insertBefore(responseDiv, responseArea.firstChild);
+            
+            // Play the response using text-to-speech if it's not a user message
+            if (!isUser) {
+                playTextToSpeech(message);
+            }
+        }
+
+        async function toggleVoiceControl() {
+            if (isListening) {
+                stopListening();
+            } else {
+                await startListening();
+            }
+        }
+
+        function stopListening() {
+            voiceControl.classList.remove('listening');
+            status.textContent = 'Click to activate voice control';
+            isListening = false;
+            if (recognitionTimeout) {
+                clearTimeout(recognitionTimeout);
+            }
+        }
+
+        async function startListening() {
+            try {
+                voiceControl.classList.add('listening');
+                status.textContent = 'Listening... Speak clearly into your microphone';
+                isListening = true;
+                
+                // Add initial feedback
+                addResponse("Listening for your command...", false);
+                
+                const response = await fetch('/send_command', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: 'voice',
+                        content: null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Remove the "Listening..." message
+                if (responseArea.firstChild) {
+                    responseArea.removeChild(responseArea.firstChild);
+                }
+                
+                if (data.status === 'success') {
+                    if (data.requires_input) {
+                        // Handle commands that need additional input
+                        addResponse(data.message);
+                        const userInput = await promptUserInput(data.message);
+                        if (userInput) {
+                            // Send the follow-up input
+                            const followUpResponse = await fetch('/send_command', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    type: 'text',
+                                    content: userInput,
+                                    is_response: true
+                                })
+                            });
+                            const followUpData = await followUpResponse.json();
+                            if (followUpData.status === 'success') {
+                                addResponse(followUpData.message);
+                            } else {
+                                addResponse('Error: ' + followUpData.message);
+                            }
+                        }
+                    } else if (data.all_responses && Array.isArray(data.all_responses)) {
+                        data.all_responses.forEach(msg => {
+                            if (msg.startsWith('You said:')) {
+                                addResponse(msg.substring(9).trim(), true);
+                            } else {
+                                addResponse(msg);
+                            }
+                        });
+                    } else if (data.message) {
+                        addResponse(data.message);
+                    }
+                } else {
+                    addResponse('Error: ' + data.message);
+                }
+            } catch (error) {
+                addResponse('Error: ' + error.message);
+            } finally {
+                stopListening();
+            }
+        }
+
+        // Function to prompt user for input
+        async function promptUserInput(prompt) {
+            return new Promise((resolve) => {
+                const input = window.prompt(prompt);
+                resolve(input);
+            });
+        }
+
+        // Add microphone permission check
+        async function checkMicrophonePermission() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(track => track.stop());
+                return true;
+            } catch (err) {
+                console.error('Microphone permission error:', err);
+                status.textContent = 'Please enable microphone access';
+                status.classList.add('text-red-500');
+                return false;
+            }
+        }
+
+        // Update voice control click handler
+        voiceControl.addEventListener('click', async () => {
+            if (!isListening) {
+                const hasMicPermission = await checkMicrophonePermission();
+                if (hasMicPermission) {
+                    await toggleVoiceControl();
+                } else {
+                    addResponse("Please enable microphone access in your browser settings to use voice commands.");
+                }
+            } else {
+                await toggleVoiceControl();
+            }
+        });
+
+        // Add keyboard shortcut for voice control
+        document.addEventListener('keydown', async (e) => {
+            if (e.key === ' ' && e.ctrlKey) { // Ctrl + Space
+                e.preventDefault();
+                if (!isListening) {
+                    const hasMicPermission = await checkMicrophonePermission();
+                    if (hasMicPermission) {
+                        await toggleVoiceControl();
+                    }
+                } else {
+                    await toggleVoiceControl();
+                }
+            }
+        });
+
+        // Animate visualizer bars randomly when listening
+        const visualizerInterval = setInterval(() => {
+            if (isListening) {
+                document.querySelectorAll('.visualizer-bar').forEach(bar => {
+                    bar.style.height = Math.random() * 30 + 3 + 'px';
+                });
+            }
+        }, 100);
+    </script>
+</body>
+</html>
