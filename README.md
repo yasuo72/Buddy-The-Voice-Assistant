@@ -105,8 +105,8 @@ The web interface provides:
 | Feature | Description | Demo |
 |---------|-------------|------|
 | Voice Commands | Natural voice interaction | ![Voice Demo](images/voice-demo.gif) |
-| Weather | Real-time weather updates | ![Weather Demo](images/weather-demo.png) |
-| Email | Voice-controlled email | ![Email Demo](images/email-demo.png) |
+| Weather | Real-time weather updates | ![Weather Demo](https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20015639.png?raw=true) |
+| cripto price | Voice-controlled price | ![Crypto Price](https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20015639.png?raw=true) |
 
 ## 🤝 Contributing
 
