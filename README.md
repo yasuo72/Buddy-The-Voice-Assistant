@@ -1,5 +1,5 @@
 <h1><p align="center">
-  <img src="https://github.com/yasuo72/assests/blob/main/BUDDY_no_bg.png" width="20%" height="240" >
+  <img src="https://github.com/yasuo72/assests/blob/main/BUDDY_no_bg.png" width="20%" height="150" >
   <h2>B.U.D.D.Y AI Assistant 🤖</h2>
 </p></h1>
 
