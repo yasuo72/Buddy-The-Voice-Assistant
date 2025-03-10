@@ -1,6 +1,6 @@
-# J.A.R.V.I.S AI Assistant 🤖
+# B.U.D.D.Y AI Assistant 🤖
 
-![JARVIS Banner](images/jarvis-banner.png)
+![Buddy Banner](images/jarvis-banner.png)
 
 A sophisticated voice-controlled AI assistant inspired by Tony Stark's JARVIS, built with Python. This assistant can perform various tasks through voice commands and provides a modern web interface for interaction.
 
@@ -131,8 +131,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Contact
 
-Your Name - [@yourtwitter](https://twitter.com/yourtwitter)
-Project Link: [https://github.com/yourusername/jarvis-ai](https://github.com/yourusername/jarvis-ai)
+Your Name - [@Rohit Singh](https://www.linkedin.com/in/rohit-singh-47b9a0302/)
+Project Link: [https://github.com/yourusername/jarvis-ai](https://github.com/yasuo72/Buddy-The-Voice-Assistent.git)
 
 ---
 ⭐️ Star this repo if you find it helpful! 
