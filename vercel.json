@@ -16,14 +16,6 @@
         "FLASK_APP": "app.py",
         "FLASK_ENV": "production",
         "PYTHON_VERSION": "3.10"
-    },
-    "build": {
-        "env": {
-            "PYTHON_VERSION": "3.10"
-        },
-        "commands": [
-            "pip install --upgrade pip setuptools wheel",
-            "pip install -r requirements.txt"
-        ]
     }
+   
 }
