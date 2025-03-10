@@ -1,9 +1,8 @@
-# B.U.D.D.Y AI Assistant 🤖
-
-
 <p align="">
   <img src="https://github.com/yasuo72/assests/blob/main/BUDDY_no_bg.png" width="40%" height="200">
+  <h1># B.U.D.D.Y AI Assistant 🤖</h1>
 </p>
+
 
 A sophisticated voice-controlled AI assistant inspired by Tony Stark's JARVIS, built with Python. This assistant can perform various tasks through voice commands and provides a modern web interface for interaction.
 
