@@ -15,8 +15,8 @@
     ],
     "env": {
     "FLASK_APP": "app.py",
-    "FLASK_ENV": "production",
-    "PYTHON_VERSION": "3.10"
+    "FLASK_ENV": "production"
+    
 
     }
 }
