@@ -25,8 +25,8 @@ A sophisticated voice-controlled AI assistant inspired by Tony Stark's JARVIS, b
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/jarvis-ai.git
-cd jarvis-ai
+git clone https://github.com/yasuo72/Buddy-The-Voice-Assistent.git
+cd Buddy-ai
 ```
 
 2. Install required packages:
@@ -37,7 +37,7 @@ pip install -r requirements.txt
 3. Set up environment variables in `.env`:
 ```env
 USER=YourName
-BOT=Jarvis
+BOT=BUDDY
 OPENWEATHER_API_KEY=your_api_key
 NEWS_API_KEY=your_api_key
 ```
