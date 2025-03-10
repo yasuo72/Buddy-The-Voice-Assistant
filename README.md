@@ -64,8 +64,11 @@ python main.py
 <h1 align="center">Screenshots</h1>
 
 <p align="center">
+  <h2>kii</h2>
   <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20014154.png" width="30%" alt="Image 1">
+    <h2>kii</h2>
   <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20014324.png" width="30%" alt="Image 2">
+    <h2>kii</h2>
   <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20014704.png" width="30%" alt="Image 3">
 </p>
 
