@@ -1,18 +1,17 @@
 import logging
 import os
 import subprocess as sp
+import time
+import json
 from datetime import datetime
 from pathlib import Path
-from random import choice
 from typing import Optional
 
 import keyboard
 import pyttsx3
-import requests
 import speech_recognition as sr
 from decouple import config
 
-from conv import random_text
 from online import (chat_with_free_gpt, chat_with_gpt, find_my_ip,
                     generate_password, get_battery_status, get_crypto_price,
                     get_current_datetime, get_exchange_rate, get_news,
@@ -27,51 +26,101 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 class VoiceAssistant:
     def __init__(self, web_mode=False):
         # Initialize Text-to-Speech Engine
         self.engine = pyttsx3.init('sapi5')
         self.engine.setProperty('volume', 1.0)
-        self.engine.setProperty('rate', 180)  # Slightly slower for better clarity
+        self.engine.setProperty('rate', 180)
         voices = self.engine.getProperty('voices')
         self.engine.setProperty('voice', voices[0].id)
 
         # Load Configurations
-        self.user = config('USER', default="User")
+        self.user = config('USER', default="User  ")
         self.bot = config('BOT', default="Jarvis")
         self.listening = False
         self.web_mode = web_mode
         self.pending_input = None
         self.last_response = None
-        self.should_stop = False  # New flag for stopping the assistant
-        
-        # Initialize speech recognizer with optimized settings
-        self.recognizer = sr.Recognizer()
-        self.recognizer.energy_threshold = 1000  # Lower threshold for better detection
-        self.recognizer.dynamic_energy_threshold = True
-        self.recognizer.dynamic_energy_adjustment_damping = 0.15
-        self.recognizer.dynamic_energy_ratio = 1.5
-        self.recognizer.pause_threshold = 0.3  # Faster response
-        self.recognizer.operation_timeout = 5  # Timeout for online operations
-        
+        self.should_stop = False
+
+        # Load responses from JSON file
+        self.load_responses()
+
+        # Initialize speech recognizer and microphone
+        self.initialize_microphone()
+
         if not web_mode:
             self.setup_hotkeys()
 
+    def load_responses(self):
+        """Load responses from a JSON file."""
+        try:
+            with open('responses.json', 'r') as file:
+                self.responses = json.load(file)
+            logger.info("Responses loaded successfully.")
+        except Exception as e:
+            logger.error(f"Error loading responses: {str(e)}")
+            self.responses = {}
+
+    def initialize_microphone(self):
+        """Initialize the microphone for speech recognition."""
+        try:
+            self.recognizer = sr.Recognizer()
+            mics = sr.Microphone.list_microphone_names()
+            logger.info(f"Available microphones: {mics}")
+
+            mic_index = self.select_microphone(mics)
+            if mic_index is not None:
+                self.microphone = sr.Microphone(device_index=mic_index)
+                with self.microphone as source:
+                    self.recognizer.energy_threshold = 4000
+                    self.recognizer.dynamic_energy_threshold = True
+                    self.recognizer.adjust_for_ambient_noise(source, duration=1)
+                    logger.info("Microphone initialized successfully")
+            else:
+                raise Exception("No suitable microphone found")
+        except Exception as e:
+            logger.error(f"Error initializing microphone: {str(e)}")
+            self.speak("Warning: There was an issue initializing the microphone. Voice commands may not work properly.")
+
+    def select_microphone(self, mics):
+        """Select the best microphone based on keywords."""
+        preferred_keywords = ["array", "mic", "input"]
+        mic_index = None
+
+        for index, name in enumerate(mics):
+            name_lower = name.lower()
+            if any(keyword in name_lower for keyword in preferred_keywords) and "output" not in name_lower:
+                mic_index = index
+                logger.info(f"Selected microphone: {name}")
+                break
+
+        if mic_index is None and len(mics) > 0:
+            for index, name in enumerate(mics):
+                if "output" not in name.lower():
+                    mic_index = index
+                    logger.info(f"Using default microphone: {name}")
+                    break
+
+        return mic_index
+
     def setup_hotkeys(self):
-        """Set up keyboard hotkeys for voice control"""
+        """Set up keyboard hotkeys for voice control."""
         keyboard.add_hotkey('k', self.start_listening)
         keyboard.add_hotkey('ctrl+alt+p', self.stop_listening)
 
     def speak(self, text: str) -> None:
-        """Speak out the given text."""
-        try:
-            if text and isinstance(text, str):
+        """Speak out the given text with optimized settings."""
+        if text and isinstance(text, str):
+            try:
                 self.engine.say(text)
                 self.engine.runAndWait()
                 logger.info(f"Assistant said: {text}")
                 self.last_response = text
-        except Exception as e:
-            logger.error(f"Error in speech: {str(e)}")
+            except Exception as e:
+                logger.error(f"Error in speech: {str(e)}")
 
     def greet_me(self) -> None:
         """Greet the user based on the time of the day with voice."""
@@ -86,14 +135,14 @@ class VoiceAssistant:
                 greeting += "Evening"
             else:
                 greeting += "Night"
-                
+
             initial_greeting = f"{greeting} {self.user}. I am {self.bot}. How may I assist you?"
             self.speak(initial_greeting)
             logger.info("Greeting delivered successfully")
-            
+
             if self.web_mode:
                 return [initial_greeting]
-                
+
         except Exception as e:
             logger.error(f"Error in greeting: {str(e)}")
             self.speak("Hello! How may I assist you?")
@@ -107,513 +156,380 @@ class VoiceAssistant:
         logger.info("Stopped Listening...")
 
     def take_command(self) -> str:
-        """Recognize and process user voice input."""
+        """Recognize and process user voice input with improved reliability."""
         query = "None"
-        
+
         try:
-            # Initialize microphone instance with optimal settings
-            mic = sr.Microphone(device_index=None)  # Use default microphone
-            with mic as source:
+            with self.microphone as source:
                 logger.info("Listening...")
-                
-                # Adjust for ambient noise with longer duration
-                try:
-                    logger.info("Adjusting for ambient noise...")
-                    self.recognizer.adjust_for_ambient_noise(source, duration=2)
-                    logger.info(f"Energy threshold set to {self.recognizer.energy_threshold}")
-                except Exception as e:
-                    logger.error(f"Error adjusting for ambient noise: {str(e)}")
-                
-                # Configure recognition settings for better accuracy
-                self.recognizer.pause_threshold = 0.8  # Longer pause threshold
-                self.recognizer.energy_threshold = 1000  # Lower energy threshold
+                self.recognizer.adjust_for_ambient_noise(source, duration=0.2)
+                self.recognizer.energy_threshold = 2500
                 self.recognizer.dynamic_energy_threshold = True
-                self.recognizer.dynamic_energy_adjustment_damping = 0.15
-                self.recognizer.dynamic_energy_ratio = 1.5
-                self.recognizer.operation_timeout = 10  # Increased timeout
-                
+                self.recognizer.pause_threshold = 0.5
+
                 try:
-                    # Listen for voice input with generous timeouts
-                    logger.info("Starting to listen for audio...")
-                    audio = self.recognizer.listen(
-                        source,
-                        timeout=10,  # 10 seconds to start speaking
-                        phrase_time_limit=10  # 10 seconds max phrase length
-                    )
+                    audio = self.recognizer.listen(source, timeout=5, phrase_time_limit=5)
                     logger.info("Audio captured, recognizing...")
-                    
-                    # Try multiple language codes for better recognition
-                    languages = ['en-US', 'en-IN', 'en-GB']
-                    recognition_errors = []
-                    
-                    for language in languages:
-                        try:
-                            query = self.recognizer.recognize_google(
-                                audio,
-                                language=language,
-                                show_all=False  # Only return most confident result
-                            )
-                            if query and query.strip():
-                                logger.info(f"Successfully recognized: '{query}' using {language}")
-                                return query.lower()
-                        except sr.UnknownValueError:
-                            recognition_errors.append(f"{language}: No speech detected")
-                            continue
-                        except sr.RequestError as e:
-                            recognition_errors.append(f"{language}: {str(e)}")
-                            continue
-                    
-                    # If we get here, no recognition was successful
-                    logger.warning(f"Recognition failed with all languages. Errors: {recognition_errors}")
-                    return "None"
-                    
-                except sr.WaitTimeoutError:
-                    logger.error("Listening timed out - no speech detected")
-                    return "None"
                 except Exception as e:
-                    logger.error(f"Error during listening: {str(e)}")
+                    logger.error(f"Error capturing audio: {str(e)}")
+                    return "None"
+
+                try:
+                    query = self.recognizer.recognize_google(audio)
+                    if query and query.strip():
+                        logger.info(f"Successfully recognized: '{query}'")
+                        return query.lower().strip()
+                except sr.UnknownValueError:
+                    return "None"
+                except sr.RequestError as e:
+                    logger.error(f"Could not request results; {str(e)}")
                     return "None"
 
         except Exception as e:
-            logger.error(f"Critical error in speech recognition: {str(e)}")
+            logger.error(f"Error in speech recognition: {str(e)}")
             return "None"
 
         return "None"
 
     def execute_command(self, query: str) -> None:
-        """Execute the appropriate action based on the voice command"""
-        # Handle empty or None queries
+        """Execute the appropriate action based on the voice command."""
         if not query or query == "None":
             self.speak("I couldn't hear you clearly. Please try again.")
             return
 
-        # Check for stop commands first
+        query = query.lower().strip()
+        logger.info(f"Processing command: {query}")
+
+        # Check for normal question answers
+        response = self.get_response(query)
+        if response:
+            self.speak(response)
+            return
+
+        # Handle stop commands first
         stop_commands = ["stop", "exit", "quit", "bye", "goodbye", "shut down", "shutdown", "turn off"]
-        if any(cmd in query.lower() for cmd in stop_commands):
+        if any(cmd in query for cmd in stop_commands):
             self.handle_stop()
             return
 
-        # Normalize the query
-        query = query.lower().strip()
-        logger.info(f"Processing command: {query}")
-        
-        # Define command variations and handlers with more natural language patterns
-        command_patterns = {
-            "stop assistant": [
-                "stop", "exit", "quit", "bye", "goodbye", "shut down",
-                "shutdown", "turn off", "stop listening", "stop assistant"
-            ],
-            "how are you": [
-                "how are you", "how're you", "how you doing", "how do you do",
-                "what's up", "how are things", "how is it going"
-            ],
-            "open command prompt": [
-                "open cmd", "launch command prompt", "start cmd", "command prompt",
-                "cmd", "terminal", "open terminal"
-            ],
-            "open camera": [
-                "open camera", "launch camera", "start camera", "camera",
-                "turn on camera", "show camera"
-            ],
-            "open notepad": [
-                "open notepad", "launch notepad", "start notepad", "notepad",
-                "text editor", "open text editor"
-            ],
-            "open discord": [
-                "open discord", "launch discord", "start discord", "discord"
-            ],
-            "open vs code": [
-                "open vs code", "launch vs code", "start vs code", "visual studio code",
-                "vs code", "vscode", "code editor"
-            ],
-            "ip address": [
-                "ip address", "what's my ip", "what is my ip", "show ip", "get ip",
-                "network address", "my ip"
-            ],
-            "youtube": [
-                "youtube", "play youtube", "search youtube", "find on youtube",
-                "video", "play video"
-            ],
-            "open google": [
-                "open google", "search google", "google search", "find on google",
-                "google", "search the web", "web search"
-            ],
-            "wikipedia": [
-                "wikipedia", "wiki search", "search wiki", "find on wikipedia",
-                "wiki", "search wikipedia", "look up on wikipedia"
-            ],
-            "give me news": [
-                "give me news", "show news", "latest news", "what's new",
-                "current news", "news update", "tell me the news"
-            ],
-            "weather": [
-                "weather", "what's the weather", "weather forecast", "temperature",
-                "how's the weather", "is it going to rain", "weather report"
-            ],
-            "send email": [
-                "send email", "compose email", "write email", "new email",
-                "email", "send mail", "write mail"
-            ],
-            "set reminder": [
-                "set reminder", "create reminder", "remind me", "new reminder",
-                "set alarm", "reminder"
-            ],
-            "stock price": [
-                "stock price", "check stocks", "stock market", "stock value",
-                "stocks", "share price", "stock quote"
-            ],
-            "exchange rate": [
-                "exchange rate", "currency exchange", "convert currency",
-                "exchange currency", "currency conversion", "forex"
-            ],
-            "generate password": [
-                "generate password", "create password", "new password",
-                "random password", "password", "secure password"
-            ],
-            "crypto price": [
-                "crypto price", "check crypto", "cryptocurrency price",
-                "crypto value", "bitcoin price", "ethereum price"
-            ],
-            "battery status": [
-                "battery status", "check battery", "battery level",
-                "power status", "battery", "power level"
-            ],
-            "current time": [
-                "current time", "what's the time", "tell me the time",
-                "time please", "what time is it", "time"
-            ],
-            "date and time": [
-                "date and time", "what's the date", "tell me the date",
-                "date please", "what day is it", "date"
-            ],
-            "ask gpt": [
-                "ask gpt", "chat gpt", "ask chat gpt", "question for gpt",
-                "gpt", "ai chat"
-            ],
-            "ask to ai": [
-                "ask to ai", "free gpt", "ask ai", "question for ai",
-                "ai", "artificial intelligence"
-            ]
-        }
-
-        # Command handlers dictionary
-        command_handlers = {
-            "how are you": lambda: self.speak("I am absolutely fine, sir. What about you?"),
-            "open command prompt": lambda: os.system('start cmd'),
-            "open camera": lambda: sp.run('start microsoft.windows.camera:', shell=True),
-            "open notepad": lambda: os.system('notepad'),
-            "open discord": lambda: self.open_application(r"%LOCALAPPDATA%\Discord\app-*\Discord.exe"),
-            "open vs code": lambda: self.open_application("vs code"),  # Special handling in open_application
-            "ip address": self.handle_ip_address,
-            "youtube": self.handle_youtube,
-            "open google": self.handle_google_search,
-            "wikipedia": self.handle_wikipedia,
-            "give me news": self.handle_news,
-            "weather": self.handle_weather,
-            "send email": self.handle_email,
-            "set reminder": self.handle_reminder,
-            "stock price": self.handle_stock_price,
-            "exchange rate": self.handle_exchange_rate,
-            "generate password": self.handle_password,
-            "crypto price": self.handle_crypto_price,
-            "battery status": self.handle_battery_status,
-            "current time": self.handle_datetime,
-            "date and time": self.handle_datetime,
-            "ask gpt": self.handle_gpt,
-            "ask to ai": self.handle_free_gpt
-        }
-
-        # Find matching command using improved matching logic
-        matched_command = None
-        max_similarity = 0
-        
-        for cmd, variations in command_patterns.items():
-            # Check for exact matches first
-            if query in variations:
-                matched_command = cmd
-                break
-            
-            # Check if any variation is contained within the query
-            for variation in variations:
-                if variation in query:
-                    matched_command = cmd
-                    break
-            
-            if matched_command:
-                break
-                
-            # Check if query contains most of the words from any variation
-            for variation in variations:
-                variation_words = set(variation.split())
-                query_words = set(query.split())
-                common_words = variation_words.intersection(query_words)
-                
-                similarity = len(common_words) / max(len(variation_words), len(query_words))
-                if similarity > max_similarity and similarity > 0.5:  # Threshold for similarity
-                    max_similarity = similarity
-                    matched_command = cmd
-
-        if matched_command:
-            try:
-                logger.info(f"Executing command: {matched_command}")
-                handler = command_handlers[matched_command]
-                handler()
-            except Exception as e:
-                error_msg = f"Error executing command '{matched_command}': {str(e)}"
-                logger.error(error_msg)
-                self.speak(f"Sorry, there was an error: {str(e)}")
-        else:
-            logger.warning(f"No matching command found for: {query}")
-            self.speak("I'm not sure what you want me to do. Could you please rephrase that?")
-
-    def open_application(self, path: str) -> None:
-        """Open an application from the specified path"""
+        # Handle search commands
         try:
-            # Common paths for VS Code
-            vscode_paths = [
-                r"C:\Program Files\Microsoft VS Code\Code.exe",
-                r"C:\Users\%USERNAME%\AppData\Local\Programs\Microsoft VS Code\Code.exe",
-                r"C:\Program Files (x86)\Microsoft VS Code\Code.exe"
-            ]
-            
-            # If path contains VS Code, try all possible paths
-            if "vs code" in path.lower():
-                for vscode_path in vscode_paths:
-                    expanded_path = os.path.expandvars(vscode_path)
-                    if Path(expanded_path).exists():
-                        os.startfile(expanded_path)
-                        self.speak("Opening Visual Studio Code")
-                        return
-                self.speak("Could not find Visual Studio Code installation")
-                return
-
-            # For other applications, try the direct path first
-            if Path(path).exists():
-                os.startfile(path)
-                self.speak(f"Opening {Path(path).name}")
-            else:
-                # Try expanding environment variables
-                expanded_path = os.path.expandvars(path)
-                if Path(expanded_path).exists():
-                    os.startfile(expanded_path)
-                    self.speak(f"Opening {Path(expanded_path).name}")
+            # YouTube commands
+            if "youtube" in query or "play" in query:
+                search_term = self.extract_search_term(query, ["youtube", "play", "on", "search", "for"])
+                if search_term:
+                    youtube(search_term)
+                    self.speak(f"Playing {search_term} on YouTube")
+                    return
                 else:
-                    self.speak("Application path not found")
-                    
+                    self.speak("What would you like to play on YouTube?")
+                    search_term = self.take_command()
+                    if search_term != "None":
+                        youtube(search_term)
+                        self.speak(f"Playing {search_term} on YouTube")
+                    return
+
+            # Google search commands
+            if "google" in query or "search" in query:
+                search_term = self.extract_search_term(query, ["google", "search", "for", "on"])
+                if search_term:
+                    self.speak(f"Searching Google for {search_term}")
+                    search_on_google(search_term)
+                    return
+                else:
+                    self.speak("What would you like to search for?")
+                    search_term = self.take_command()
+                    if search_term != "None":
+                        self.speak(f"Searching Google for {search_term}")
+                        search_on_google(search_term)
+                    return
+
+            # Wikipedia commands
+            if "wikipedia" in query:
+                search_term = self.extract_search_term(query, ["wikipedia", "search", "for", "on", "wiki"])
+                if search_term:
+                    self.speak(f"Searching Wikipedia for {search_term}")
+                    result = search_on_wikipedia(search_term)
+                    self.speak(result)
+                    return
+                else:
+                    self.speak("What would you like to look up on Wikipedia?")
+                    search_term = self.take_command()
+                    if search_term != "None":
+                        self.speak(f"Searching Wikipedia for {search_term}")
+                        result = search_on_wikipedia(search_term)
+                        self.speak(result)
+                    return
+
+            # Handle other commands
+            if "weather" in query:
+                self.handle_weather()
+            elif "news" in query:
+                self.handle_news()
+            elif "email" in query:
+                self.handle_email()
+            elif "reminder" in query:
+                self.handle_reminder()
+            elif "stock" in query:
+                self.handle_stock_price()
+            elif "exchange rate" in query:
+                self.handle_exchange_rate()
+            elif "password" in query:
+                self.handle_password()
+            elif "crypto" in query:
+                self.handle_crypto_price()
+            elif "battery" in query:
+                self.handle_battery_status()
+            elif "time" in query:
+                self.handle_datetime()
+            elif "gpt" in query or "chat" in query:
+                self.handle_gpt()
+            elif "open" in query:
+                if "command prompt" in query or "cmd" in query:
+                    os.system('start cmd')
+                elif "camera" in query:
+                    sp.run('start microsoft.windows.camera:', shell=True)
+                elif "notepad" in query:
+                    os.system('notepad')
+                elif "discord" in query:
+                    self.open_application(r"%LOCALAPPDATA%\Discord\app-*\Discord.exe")
+                elif "vs code" in query or "visual studio code" in query:
+                    self.open_application("vs code")
+            else:
+                self.speak("I'm not sure what you want me to do. Could you please rephrase that?")
+
         except Exception as e:
-            logger.error(f"Error opening application: {str(e)}")
-            self.speak("Error opening application")
+            logger.error(f"Error executing command: {str(e)}")
+            self.speak(f"I encountered an error: {str(e)}")
 
-    # Handler methods for different commands
-    def handle_ip_address(self) -> None:
-        ip_address = find_my_ip()
-        self.speak(f"Your IP address is {ip_address}")
-        print(f"Your IP address is {ip_address}")
+    def get_response(self, query: str) -> Optional[str]:
+        """Get a response from the loaded JSON data based on the query."""
+        for key in self.responses:
+            if key in query:
+                return self.responses[key]
+        return None
 
-    def handle_youtube(self) -> None:
-        if self.web_mode:
-            self.last_response = "What do you want to play on YouTube?"
-            self.pending_input = "youtube_query"
-            return
+    def extract_search_term(self, query: str, words_to_remove: list) -> Optional[str]:
+        """Extract search term from query by removing command words."""
+        query_words = query.split()
+        search_words = [word for word in query_words if word not in words_to_remove]
+        return " ".join(search_words).strip() if search_words else None
 
-        self.speak("What do you want to play on YouTube?")
-        video = self.take_command()
-        self._process_youtube_query(video)
+    def handle_youtube(self, search_term: Optional[str] = None) -> None:
+        """Handle YouTube commands with improved search term handling."""
+        try:
+            if not search_term:
+                self.speak("What would you like to play on YouTube?")
+                search_term = self.take_command()
+                if search_term == "None":
+                    self.speak("I couldn't understand what you want to play. Please try again.")
+                    return
 
-    def _process_youtube_query(self, query):
-        youtube(query)
-        self.speak(f"Playing {query} on YouTube")
+            if search_term:
+                self.speak(f"Playing {search_term} on YouTube")
+                youtube(search_term)
+            else:
+                self.speak("I couldn't understand what you want to play. Please try again.")
+        except Exception as e:
+            logger.error(f"Error in YouTube handling: {str(e)}")
+            self.speak("Sorry, I had trouble playing that on YouTube")
 
-    def handle_google_search(self) -> None:
-        if self.web_mode:
-            self.last_response = "What do you want to search on Google?"
-            self.pending_input = "google_query"
-            return
+    def handle_google_search(self, search_term: Optional[str] = None) -> None:
+        """Handle Google search with improved search term handling."""
+        try:
+            if not search_term:
+                self.speak("What would you like to search for on Google?")
+                search_term = self.take_command()
+                if search_term == "None":
+                    self.speak("I couldn't understand what you want to search. Please try again.")
+                    return
 
-        self.speak("What do you want to search on Google?")
-        search_query = self.take_command()
-        self._process_google_search(search_query)
+            if search_term:
+                self.speak(f"Searching Google for {search_term}")
+                search_on_google(search_term)
+            else:
+                self.speak("I couldn't understand what you want to search. Please try again.")
+        except Exception as e:
+            logger.error(f"Error in Google search: {str(e)}")
+            self.speak("Sorry, I had trouble searching Google")
 
-    def _process_google_search(self, query):
-        search_on_google(query)
-        self.speak(f"Searching for {query} on Google")
+    def handle_wikipedia(self, search_term: Optional[str] = None) -> None:
+        """Handle Wikipedia search with improved search term handling."""
+        try:
+            if not search_term:
+                self.speak("What would you like to look up on Wikipedia?")
+                search_term = self.take_command()
+                if search_term == "None":
+                    self.speak("I couldn't understand what you want to search. Please try again.")
+                    return
 
-    def handle_wikipedia(self) -> None:
-        if self.web_mode:
-            self.last_response = "What do you want to search on Wikipedia?"
-            self.pending_input = "wiki_query"
-            return
-
-        self.speak("What do you want to search on Wikipedia?")
-        search_term = self.take_command()
-        self._process_wiki_search(search_term)
-
-    def _process_wiki_search(self, query):
-        results = search_on_wikipedia(query)
-        self.speak("Here's what I found on Wikipedia:")
-        self.speak(results)
+            if search_term:
+                self.speak(f"Searching Wikipedia for {search_term}")
+                result = search_on_wikipedia(search_term)
+                self.speak(result)
+            else:
+                self.speak("I couldn't understand what you want to search. Please try again.")
+        except Exception as e:
+            logger.error(f"Error in Wikipedia search: {str(e)}")
+            self.speak("Sorry, I had trouble searching Wikipedia")
 
     def handle_news(self) -> None:
-        self.speak("Fetching the latest news headlines...")
-        headlines = get_news()
-        for headline in headlines:
-            self.speak(headline)
-        print("\n".join(headlines))
-
-    def handle_weather(self) -> None:
-        """Improved weather handling with better voice interaction"""
+        """Handle news with better conversation flow."""
         try:
-            self.speak("What city would you like to know the weather for?")
-            
-            if self.web_mode:
-                self.last_response = "Please enter your city name:"
-                self.pending_input = "weather_city"
+            self.speak("Here are the latest headlines:")
+            headlines = get_news()
+
+            if not headlines:
+                self.speak("Sorry, I couldn't fetch any news at the moment.")
                 return
 
-            # Wait for voice input
-            city = None
-            while not city or city == "None":
-                city = self.take_command()
-                if city == "None":
-                    self.speak("I didn't catch that. Please say the city name again.")
-            
-            self._process_weather(city)
-            
-        except Exception as e:
-            logger.error(f"Error in weather handling: {str(e)}")
-            self.speak("I had trouble processing your request. Please try again.")
+            for headline in headlines[:3]:  # Limit to 3 headlines to avoid too much talking
+                self.speak(headline)
+                time.sleep(0.5)  # Brief pause between headlines
 
-    def _process_weather(self, city):
-        """Process weather request with comprehensive weather information"""
+        except Exception as e:
+            logger.error(f"Error fetching news: {str(e)}")
+            self.speak("Sorry, I had trouble fetching the news.")
+
+    def handle_weather(self, city=None) -> None:
+        """Improved weather handling with better conversation flow."""
         try:
-            self.speak(f"Fetching weather details for {city}...")
+            if not city:
+                self.speak("What city would you like to know the weather for?")
+                city = self.take_command()
+
+                if city == "None":
+                    self.speak("I couldn't understand the city name. Please try again.")
+                    return
+
+            # Don't announce fetching, just get the data
             weather_data = weather_forecast(city)
-            
+
             if not weather_data or not any(weather_data):
                 self.speak(f"Sorry, I couldn't find weather information for {city}")
                 return
-                
+
             weather, temp, feels_like, humidity, wind_speed = weather_data
-            
-            # Construct detailed weather response with clear temperature units
+
+            # Format temperature values to be more natural
+            temp = round(float(temp))
+            feels_like = round(float(feels_like))
+
             response = (
-                f"Current weather in {city}: {weather}. "
-                f"Temperature is {temp} degrees Celsius "
-                f"(feels like {feels_like} degrees Celsius). "
+                f"The weather in {city} is {weather}. "
+                f"It's {temp} degrees Celsius, "
+                f"feels like {feels_like} degrees. "
                 f"Humidity is {humidity}% with wind speed of {wind_speed} meters per second."
             )
-            
+
             self.speak(response)
-            print(response)  # Also print the response for better visibility
-            
+
         except Exception as e:
-            logger.error(f"Error getting weather: {str(e)}")
-            self.speak(f"Sorry, I had trouble getting weather information for {city}. Please try again.")
+            logger.error(f"Error in weather handling: {str(e)}")
+            self.speak("I had trouble getting the weather information. Please try again.")
 
     def handle_email(self) -> None:
-        """Handle email with voice input"""
+        """Handle email with better conversation flow."""
         try:
-            if self.web_mode:
-                self.last_response = "Please enter the recipient's email:"
-                self.pending_input = "email_recipient"
+            # Get recipient
+            self.speak("Who would you like to send the email to?")
+            receiver_email = self.take_command()
+            if not receiver_email or receiver_email == "None":
+                self.speak("I couldn't understand the email address.")
                 return
 
-            # Get recipient email
-            self.speak("Who would you like to send the email to?")
-            receiver_email = self.handle_input_with_voice("Please say the email address.")
-            
-            if not receiver_email:
-                self.speak("I couldn't understand the email address. Please try again later.")
-                return
-                
             # Get subject
             self.speak("What should be the subject of the email?")
-            subject = self.handle_input_with_voice("Please say the subject.")
-            
-            if not subject:
-                self.speak("I couldn't understand the subject. Please try again later.")
+            subject = self.take_command()
+            if not subject or subject == "None":
+                self.speak("I couldn't understand the subject.")
                 return
-                
+
             # Get message
             self.speak("What message would you like to send?")
-            message = self.handle_input_with_voice("Please say your message.")
-            
-            if not message:
-                self.speak("I couldn't understand the message. Please try again later.")
+            message = self.take_command()
+            if not message or message == "None":
+                self.speak("I couldn't understand the message.")
                 return
-                
-            self._process_email_final(receiver_email, subject, message)
-            
+
+            # Send email
+            try:
+                response = send_email(receiver_email, subject, message)
+                self.speak(response)
+            except Exception as e:
+                logger.error(f"Error sending email: {str(e)}")
+                self.speak("Sorry, I couldn't send the email. Please check the email address and try again.")
+
         except Exception as e:
             logger.error(f"Error in email handling: {str(e)}")
-            self.speak("I had trouble processing your email request. Please try again.")
+            self.speak("I had trouble with the email process. Please try again.")
 
     def handle_reminder(self) -> None:
-        if self.web_mode:
-            self.last_response = "What task should I remind you about?"
-            self.pending_input = "reminder_task"
-            return
-
-        self.speak("What task should I remind you about?")
+        """Handle reminders with better conversation flow."""
+        # Get task
+        self.speak("What should I remind you about?")
         task = self.take_command()
-        self._process_reminder_step1(task)
-
-    def _process_reminder_step1(self, task):
-        if self.web_mode:
-            self.last_response = "At what time? (e.g., 10:30 AM)"
-            self.pending_input = "reminder_time"
-            self._temp_reminder = {"task": task}
+        if not task or task == "None":
+            self.speak("I couldn't understand the task.")
             return
 
-        self.speak("At what time?")
-        time = input("Enter time (e.g., 10:30 AM): ")
-        self._process_reminder_final(task, time)
+        # Get time
+        self.speak("At what time? Please say the time like 10:30 AM.")
+        time_str = self.take_command()
+        if not time_str or time_str == "None":
+            self.speak("I couldn't understand the time.")
+            return
 
-    def _process_reminder_final(self, task, time):
-        response = set_reminder(task, time)
-        self.speak(response)
+        try:
+            response = set_reminder(task, time_str)
+            self.speak(response)
+        except Exception as e:
+            logger.error(f"Error setting reminder: {str(e)}")
+            self.speak(
+                "Sorry, I couldn't set the reminder. Please make sure to specify the time in the correct format.")
 
     def handle_stock_price(self) -> None:
-        if self.web_mode:
-            self.last_response = "Which stock price would you like to check? (Enter symbol)"
-            self.pending_input = "stock_symbol"
-            return
+        """Handle stock price check with better conversation flow."""
+        self.speak("Which stock would you like to check? Please say the symbol.")
+        stock_symbol = self.take_command()
 
-        self.speak("Which stock price would you like to check?")
-        stock_symbol = input("Enter Stock Symbol: ").upper()
-        self._process_stock_price(stock_symbol)
-
-    def _process_stock_price(self, symbol):
-        response = get_stock_price(symbol.upper())
-        self.speak(response)
+        if stock_symbol and stock_symbol != "None":
+            try:
+                response = get_stock_price(stock_symbol.upper())
+                self.speak(response)
+            except Exception as e:
+                logger.error(f"Error getting stock price: {str(e)}")
+                self.speak(f"Sorry, I couldn't find the stock price for {stock_symbol}")
+        else:
+            self.speak("I couldn't understand the stock symbol.")
 
     def handle_exchange_rate(self) -> None:
-        if self.web_mode:
-            self.last_response = "Enter base currency (e.g., USD):"
-            self.pending_input = "exchange_base"
+        """Handle currency exchange with better conversation flow."""
+        # Get base currency
+        self.speak("What is the base currency? For example, USD for US Dollar.")
+        base_currency = self.take_command()
+
+        if not base_currency or base_currency == "None":
+            self.speak("I couldn't understand the base currency.")
             return
 
-        self.speak("Which currencies would you like to convert?")
-        base_currency = input("Enter base currency (e.g., USD): ").upper()
-        self._process_exchange_step1(base_currency)
+        # Get target currency
+        self.speak("What is the target currency? For example, EUR for Euro.")
+        target_currency = self.take_command()
 
-    def _process_exchange_step1(self, base_currency):
-        if self.web_mode:
-            self.last_response = "Enter target currency (e.g., EUR):"
-            self.pending_input = "exchange_target"
-            self._temp_exchange = {"base": base_currency}
+        if not target_currency or target_currency == "None":
+            self.speak("I couldn't understand the target currency.")
             return
 
-        self.speak("Enter target currency:")
-        target_currency = input("Enter target currency (e.g., EUR): ").upper()
-        self._process_exchange_final(base_currency, target_currency)
-
-    def _process_exchange_final(self, base_currency, target_currency):
-        response = get_exchange_rate(base_currency.upper(), target_currency.upper())
-        self.speak(response)
+        try:
+            response = get_exchange_rate(base_currency.upper(), target_currency.upper())
+            self.speak(response)
+        except Exception as e:
+            logger.error(f"Error getting exchange rate: {str(e)}")
+            self.speak("Sorry, I couldn't get the exchange rate.")
 
     def handle_password(self) -> None:
-        """Handle password generation with voice input"""
+        """Handle password generation with voice input."""
         try:
             if self.web_mode:
                 self.last_response = "What length should the password be? (default is 12)"
@@ -621,16 +537,11 @@ class VoiceAssistant:
                 return
 
             self.speak("What length would you like for the password?")
-            length_str = self.handle_input_with_voice("Please say a number for the password length.")
-            
-            if length_str and length_str.isdigit():
-                length = int(length_str)
-            else:
-                self.speak("Using default length of 12 characters.")
-                length = 12
-            
+            length_str = self.take_command()
+
+            length = int(length_str) if length_str and length_str.isdigit() else 12
             self._process_password(length)
-            
+
         except Exception as e:
             logger.error(f"Error in password handling: {str(e)}")
             self.speak("I had trouble processing your request. Using default length of 12.")
@@ -638,7 +549,6 @@ class VoiceAssistant:
 
     def _process_password(self, length):
         try:
-            length = int(length) if length else 12
             response = generate_password(length)
             self.speak(response)
         except ValueError:
@@ -647,18 +557,19 @@ class VoiceAssistant:
             self.speak(response)
 
     def handle_crypto_price(self) -> None:
-        if self.web_mode:
-            self.last_response = "Which cryptocurrency price would you like to check? (e.g., btc, eth)"
-            self.pending_input = "crypto_symbol"
-            return
+        """Handle cryptocurrency price check with better conversation flow."""
+        self.speak("Which cryptocurrency would you like to check?")
+        crypto = self.take_command()
 
-        self.speak("Which cryptocurrency price would you like to check?")
-        crypto_symbol = input("Enter cryptocurrency symbol (e.g., btc, eth): ").lower()
-        self._process_crypto_price(crypto_symbol)
-
-    def _process_crypto_price(self, symbol):
-        response = get_crypto_price(symbol.lower())
-        self.speak(response)
+        if crypto and crypto != "None":
+            try:
+                response = get_crypto_price(crypto.lower())
+                self.speak(response)
+            except Exception as e:
+                logger.error(f"Error getting crypto price: {str(e)}")
+                self.speak(f"Sorry, I couldn't find the price for {crypto}")
+        else:
+            self.speak("I couldn't understand the cryptocurrency name.")
 
     def handle_battery_status(self) -> None:
         response = get_battery_status()
@@ -671,75 +582,33 @@ class VoiceAssistant:
         print(response)
 
     def handle_gpt(self) -> None:
-        if self.web_mode:
-            self.last_response = "What would you like to ask GPT?"
-            self.pending_input = "gpt_query"
-            return
+        """Handle GPT interaction with better conversation flow."""
+        self.speak("What would you like to ask?")
+        question = self.take_command()
 
-        self.speak("What would you like to ask GPT?")
-        user_prompt = input("Enter your question: ")
-        self._process_gpt_query(user_prompt)
-
-    def _process_gpt_query(self, query):
-        response = chat_with_gpt(query)
-        self.speak(response)
+        if question and question != "None":
+            try:
+                response = chat_with_gpt(question)
+                self.speak(response)
+            except Exception as e:
+                logger.error(f"Error with GPT: {str(e)}")
+                self.speak("Sorry, I had trouble getting a response from GPT.")
+        else:
+            self.speak("I couldn't understand your question.")
 
     def handle_free_gpt(self) -> None:
-        if self.web_mode:
-            self.last_response = "What would you like to ask?"
-            self.pending_input = "free_gpt_query"
-            return
-
+        """Handle free GPT interaction with voice input."""
         self.speak("What would you like to ask?")
-        user_prompt = input("Enter your question: ")
-        self._process_free_gpt_query(user_prompt)
+        user_prompt = self.take_command()
 
-    def _process_free_gpt_query(self, query):
-        response = chat_with_free_gpt(query)
-        self.speak(response)
-
-    def process_pending_input(self, user_input):
-        """Handle pending input from web interface"""
-        if not self.pending_input:
-            return False
-
-        input_type = self.pending_input
-        self.pending_input = None  # Reset pending input
-
-        handlers = {
-            "weather_city": self._process_weather,
-            "youtube_query": self._process_youtube_query,
-            "google_query": self._process_google_search,
-            "wiki_query": self._process_wiki_search,
-            "gpt_query": self._process_gpt_query,
-            "free_gpt_query": self._process_free_gpt_query,
-            "stock_symbol": self._process_stock_price,
-            "crypto_symbol": self._process_crypto_price,
-            "password_length": self._process_password,
-        }
-
-        # Multi-step handlers
-        if input_type == "email_recipient":
-            self._process_email_step1(user_input)
-        elif input_type == "email_subject":
-            self._process_email_step2(self._temp_email["recipient"], user_input)
-        elif input_type == "email_message":
-            self._process_email_final(self._temp_email["recipient"], self._temp_email["subject"], user_input)
-        elif input_type == "reminder_task":
-            self._process_reminder_step1(user_input)
-        elif input_type == "reminder_time":
-            self._process_reminder_final(self._temp_reminder["task"], user_input)
-        elif input_type == "exchange_base":
-            self._process_exchange_step1(user_input)
-        elif input_type == "exchange_target":
-            self._process_exchange_final(self._temp_exchange["base"], user_input)
-        elif input_type in handlers:
-            handlers[input_type](user_input)
-
-        return True
+        if user_prompt and user_prompt != "None":
+            response = chat_with_free_gpt(user_prompt)
+            self.speak(response)
+        else:
+            self.speak("I couldn't understand your question. Please try again.")
 
     def handle_stop(self) -> None:
-        """Handle the stop command"""
+        """Handle the stop command."""
         self.speak("Goodbye! Have a great day!")
         logger.info("Stop command received. Shutting down...")
         self.should_stop = True
@@ -747,22 +616,8 @@ class VoiceAssistant:
         if not self.web_mode:
             os._exit(0)  # Force exit in desktop mode
 
-    def handle_input_with_voice(self, prompt: str, max_attempts: int = 3) -> str:
-        """Generic handler for voice input with retries"""
-        for attempt in range(max_attempts):
-            self.speak(prompt)
-            response = self.take_command()
-            
-            if response and response != "None":
-                return response
-            
-            if attempt < max_attempts - 1:
-                self.speak("I didn't catch that. Please try again.")
-            
-        return None
-
     def run(self):
-        """Main loop to run the voice assistant"""
+        """Main loop to run the voice assistant."""
         self.greet_me()
         while True:
             if self.should_stop:
@@ -772,6 +627,7 @@ class VoiceAssistant:
                 if self.should_stop:
                     break
                 self.execute_command(query)
+
 
 # Only run this if the file is run directly (not imported)
 if __name__ == '__main__':

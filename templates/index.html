@@ -3,184 +3,368 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>J.A.R.V.I.S</title>
+    <title>B.U.D.D.Y</title> - AI Assistant</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Roboto:wght@300;400;500&display=swap');
+
+        :root {
+            --primary: #00fff2;
+            --secondary: #0066ff;
+            --accent: #ff00ff;
+            --background: #000B1E;
+            --surface: rgba(0, 30, 60, 0.5);
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) var(--background);
+        }
+
+        *::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: var(--background);
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background-color: var(--primary);
+            border-radius: 3px;
+        }
+
         body {
-            background: #000;
+            background: var(--background);
             color: #fff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Roboto', sans-serif;
+            overflow-x: hidden;
         }
-        .jarvis-bg {
-            background: linear-gradient(135deg, #000428, #004e92);
+
+        .orbitron {
+            font-family: 'Orbitron', sans-serif;
         }
+
+        .dashboard-bg {
+            background:
+                radial-gradient(circle at 10% 20%, rgba(0, 102, 255, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(255, 0, 255, 0.1) 0%, transparent 20%),
+                linear-gradient(135deg, #000B1E 0%, #001E3C 100%);
+            position: relative;
+        }
+
+        .dashboard-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                repeating-linear-gradient(90deg,
+                    transparent 0%,
+                    transparent 49%,
+                    rgba(0, 255, 242, 0.03) 50%,
+                    transparent 51%,
+                    transparent 100%);
+            background-size: 4px 100%;
+            pointer-events: none;
+        }
+
         .voice-circle {
             width: 200px;
             height: 200px;
             border-radius: 50%;
-            background: rgba(0, 78, 146, 0.3);
-            border: 2px solid #00a8ff;
-            animation: pulse 2s infinite;
+            background: rgba(0, 255, 242, 0.05);
+            border: 2px solid var(--primary);
             position: relative;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
-        .voice-circle::before {
-            content: '';
-            position: absolute;
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            background: rgba(0, 168, 255, 0.1);
-            border: 2px solid #00a8ff;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
+
+        .voice-circle::before,
         .voice-circle::after {
             content: '';
             position: absolute;
-            width: 160px;
-            height: 160px;
             border-radius: 50%;
-            background: rgba(0, 168, 255, 0.2);
-            border: 2px solid #00a8ff;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            background: transparent;
+            border: 2px solid var(--primary);
+            animation: ripple 2s infinite;
+            opacity: 0;
         }
-        @keyframes pulse {
+
+        .voice-circle::before {
+            width: 220px;
+            height: 220px;
+            top: -12px;
+            left: -12px;
+            animation-delay: 0s;
+        }
+
+        .voice-circle::after {
+            width: 240px;
+            height: 240px;
+            top: -22px;
+            left: -22px;
+            animation-delay: 0.5s;
+        }
+
+        @keyframes ripple {
             0% {
-                box-shadow: 0 0 0 0 rgba(0, 168, 255, 0.4);
+                transform: scale(0.9);
+                opacity: 0;
             }
-            70% {
-                box-shadow: 0 0 0 20px rgba(0, 168, 255, 0);
+            50% {
+                opacity: 0.3;
             }
             100% {
-                box-shadow: 0 0 0 0 rgba(0, 168, 255, 0);
+                transform: scale(1);
+                opacity: 0;
             }
         }
+
         .listening .voice-circle {
-            animation: pulse 1s infinite;
-            background: rgba(0, 255, 0, 0.2);
-            border-color: #00ff00;
+            background: rgba(0, 255, 242, 0.2);
+            box-shadow: 0 0 30px rgba(0, 255, 242, 0.3);
         }
-        .listening .voice-circle::before,
-        .listening .voice-circle::after {
-            border-color: #00ff00;
-        }
-        .command-list {
-            background: rgba(0, 78, 146, 0.1);
-            border: 1px solid rgba(0, 168, 255, 0.3);
+
+        .command-card {
+            background: var(--surface);
+            border: 1px solid rgba(0, 255, 242, 0.2);
             backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
         }
+
+        .command-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 242, 0.2);
+        }
+
         .response-area {
-            background: rgba(0, 78, 146, 0.1);
-            border: 1px solid rgba(0, 168, 255, 0.3);
+            background: var(--surface);
+            border: 1px solid rgba(0, 255, 242, 0.2);
             backdrop-filter: blur(10px);
-            max-height: 300px;
-            overflow-y: auto;
         }
+
         .response-item {
-            border-left: 3px solid #00a8ff;
-            background: rgba(0, 168, 255, 0.1);
-            margin: 10px 0;
-            padding: 10px;
+            border-left: 3px solid var(--primary);
+            background: rgba(0, 255, 242, 0.05);
+            transition: all 0.3s ease;
         }
+
+        .response-item:hover {
+            background: rgba(0, 255, 242, 0.1);
+        }
+
         .visualizer {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 2px;
+            gap: 3px;
             height: 60px;
         }
+
         .visualizer-bar {
             width: 3px;
-            background: #00a8ff;
+            background: var(--primary);
             height: 3px;
             transition: height 0.1s ease;
         }
+
         .listening .visualizer-bar {
             animation: soundBars 0.5s infinite;
         }
+
         @keyframes soundBars {
             0% { height: 3px; }
-            50% { height: 20px; }
+            50% { height: 30px; }
             100% { height: 3px; }
+        }
+
+        .glow-text {
+            text-shadow: 0 0 10px var(--primary);
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .command-menu {
+            display: none;
+            position: absolute;
+            background: rgba(0, 78, 146, 0.8);
+            border: 1px solid rgba(0, 255, 242, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            z-index: 10;
+        }
+
+        .command-menu.active {
+            display: block;
         }
     </style>
 </head>
-<body class="min-h-screen jarvis-bg">
+<body class="min-h-screen dashboard-bg">
     <div class="container mx-auto px-4 py-8">
-        <div class="max-w-6xl mx-auto">
-            <h1 class="text-4xl font-bold text-center mb-8 text-blue-400">J.A.R.V.I.S</h1>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Left Column: Available Commands -->
-                <div class="command-list rounded-lg p-6">
-                    <h2 class="text-2xl font-semibold mb-4 text-blue-400">Voice Commands</h2>
-                    <div class="space-y-4">
-                        <div class="command-group">
-                            <h3 class="text-lg font-semibold text-blue-400 mb-2">General</h3>
-                            <ul class="space-y-2 text-sm text-gray-300">
-                                <li><span class="text-blue-400">→</span> "how are you"</li>
-                                <li><span class="text-blue-400">→</span> "current time"</li>
-                                <li><span class="text-blue-400">→</span> "battery status"</li>
-                                <li><span class="text-blue-400">→</span> "ip address"</li>
-                            </ul>
-                        </div>
-                        <div class="command-group mt-4">
-                            <h3 class="text-lg font-semibold text-blue-400 mb-2">Applications</h3>
-                            <ul class="space-y-2 text-sm text-gray-300">
-                                <li><span class="text-blue-400">→</span> "open command prompt"</li>
-                                <li><span class="text-blue-400">→</span> "open camera"</li>
-                                <li><span class="text-blue-400">→</span> "open notepad"</li>
-                                <li><span class="text-blue-400">→</span> "open discord"</li>
-                                <li><span class="text-blue-400">→</span> "open vs code"</li>
-                            </ul>
-                        </div>
-                        <div class="command-group mt-4">
-                            <h3 class="text-lg font-semibold text-blue-400 mb-2">Web & Search</h3>
-                            <ul class="space-y-2 text-sm text-gray-300">
-                                <li><span class="text-blue-400">→</span> "youtube"</li>
-                                <li><span class="text-blue-400">→</span> "open google"</li>
-                                <li><span class="text-blue-400">→</span> "wikipedia"</li>
-                                <li><span class="text-blue-400">→</span> "give me news"</li>
-                            </ul>
-                        </div>
-                        <div class="command-group mt-4">
-                            <h3 class="text-lg font-semibold text-blue-400 mb-2">Tools & Utilities</h3>
-                            <ul class="space-y-2 text-sm text-gray-300">
-                                <li><span class="text-blue-400">→</span> "weather"</li>
-                                <li><span class="text-blue-400">→</span> "send email"</li>
-                                <li><span class="text-blue-400">→</span> "set reminder"</li>
-                                <li><span class="text-blue-400">→</span> "generate password"</li>
-                            </ul>
-                        </div>
-                        <div class="command-group mt-4">
-                            <h3 class="text-lg font-semibold text-blue-400 mb-2">Finance</h3>
-                            <ul class="space-y-2 text-sm text-gray-300">
-                                <li><span class="text-blue-400">→</span> "stock price"</li>
-                                <li><span class="text-blue-400">→</span> "crypto price"</li>
-                                <li><span class="text-blue-400">→</span> "exchange rate"</li>
-                            </ul>
-                        </div>
-                        <div class="command-group mt-4">
-                            <h3 class="text-lg font-semibold text-blue-400 mb-2">AI Chat</h3>
-                            <ul class="space-y-2 text-sm text-gray-300">
-                                <li><span class="text-blue-400">→</span> "ask gpt"</li>
-                                <li><span class="text-blue-400">→</span> "ask to ai"</li>
-                            </ul>
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-12">
+                <h1 class="orbitron text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]">
+                    J.A.R.V.I.S
+                </h1>
+                <div class="flex items-center gap-3">
+                    <div class="status-indicator"></div>
+                    <span class="text-[var(--primary)] orbitron">SYSTEM ONLINE</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Left Column: Command Categories -->
+                <div class="lg:col-span-3 space-y-6">
+                    <div class="command-card rounded-lg p-6">
+                        <h2 class="orbitron text-xl font-bold text-[var(--primary)] mb-6">COMMAND MODULES</h2>
+                        <div class="space-y-4">
+                            <div class="command-group">
+                                <h3 class="text-lg font-semibold text-[var(--secondary)] mb-3 orbitron">CORE SYSTEMS</h3>
+                                <ul class="space-y-2 text-sm">
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-microchip text-[var(--primary)]"></i>
+                                        <span>"how are you"</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-clock text-[var(--primary)]"></i>
+                                        <span>"current time"</span>
+ </li>
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-battery-full text-[var(--primary)]"></i>
+                                        <span>"battery status"</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-network-wired text-[var(--primary)]"></i>
+                                        <span>"ip address"</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="command-group">
+                                <h3 class="text-lg font-semibold text-[var(--secondary)] mb-3 orbitron">APPLICATIONS</h3>
+                                <ul class="space-y-2 text-sm">
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-terminal text-[var(--primary)]"></i>
+                                        <span>"open command prompt"</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-camera text-[var(--primary)]"></i>
+                                        <span>"open camera"</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-file-alt text-[var(--primary)]"></i>
+                                        <span>"open notepad"</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-comments text-[var(--primary)]"></i>
+                                        <span>"open discord"</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-code text-[var(--primary)]"></i>
+                                        <span>"open vs code"</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="command-group">
+                                <h3 class="text-lg font-semibold text-[var(--secondary)] mb-3 orbitron">WEB & SEARCH</h3>
+                                <ul class="space-y-2 text-sm">
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-video text-[var(--primary)]"></i>
+                                        <span>"youtube"</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-globe text-[var(--primary)]"></i>
+                                        <span>"open google"</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-wikipedia-w text-[var(--primary)]"></i>
+                                        <span>"wikipedia"</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-newspaper text-[var(--primary)]"></i>
+                                        <span>"give me news"</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="command-group">
+                                <h3 class="text-lg font-semibold text-[var(--secondary)] mb-3 orbitron">TOOLS & UTILITIES</h3>
+                                <ul class="space-y-2 text-sm">
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-cloud-sun text-[var(--primary)]"></i>
+                                        <span>"weather"</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-envelope text-[var(--primary)]"></i>
+                                        <span>"send email"</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-calendar-check text-[var(--primary)]"></i>
+                                        <span>"set reminder"</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-key text-[var(--primary)]"></i>
+                                        <span>"generate password"</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            < <div class="command-group">
+                                <h3 class="text-lg font-semibold text-[var(--secondary)] mb-3 orbitron">FINANCE</h3>
+                                <ul class="space-y-2 text-sm">
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-chart-line text-[var(--primary)]"></i>
+                                        <span>"stock price"</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-coins text-[var(--primary)]"></i>
+                                        <span>"crypto price"</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-exchange-alt text-[var(--primary)]"></i>
+                                        <span>"exchange rate"</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="command-group">
+                                <h3 class="text-lg font-semibold text-[var(--secondary)] mb-3 orbitron">AI CHAT</h3>
+                                <ul class="space-y-2 text-sm">
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-robot text-[var(--primary)]"></i>
+                                        <span>"ask gpt"</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 hover:bg-[var(--surface)] p-2 rounded transition-all">
+                                        <i class="fas fa-comments text-[var(--primary)]"></i>
+                                        <span>"ask to ai"</span>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Middle and Right Columns -->
-                <div class="lg:col-span-2">
+                <div class="lg:col-span-9">
                     <!-- Voice Control Section -->
                     <div class="flex flex-col items-center justify-center mb-8">
                         <div id="voiceControl" class="voice-circle flex items-center justify-center">
-                            <i class="fas fa-microphone text-4xl text-blue-400"></i>
+                            <i class="fas fa-microphone text-4xl text-[var(--primary)]"></i>
                             <div class="visualizer absolute bottom-0 w-full">
                                 <div class="visualizer-bar"></div>
                                 <div class="visualizer-bar"></div>
@@ -189,12 +373,12 @@
                                 <div class="visualizer-bar"></div>
                             </div>
                         </div>
-                        <p id="status" class="mt-4 text-blue-400 text-lg">Click to activate voice control</p>
+                        <p id="status" class="mt-4 text-[var(--primary)] text-lg">Click to activate voice control</p>
                     </div>
 
                     <!-- Response Section -->
                     <div class="response-area rounded-lg p-6">
-                        <h2 class="text-2xl font-semibold mb-4 text-blue-400">System Response</h2>
+                        <h2 class="text-2xl font-semibold mb-4 text-[var(--primary)]">System Response</h2>
                         <div id="responseArea" class="space-y-4">
                             <!-- Responses will be added here -->
                         </div>
@@ -231,7 +415,7 @@
         function addResponse(message, isUser = false) {
             const responseDiv = document.createElement('div');
             responseDiv.className = 'response-item';
-            
+
             const escapedMessage = message
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
@@ -243,13 +427,13 @@
                 <div class="flex items-start gap-3">
                     <i class="fas ${isUser ? 'fa-user' : 'fa-robot'} text-blue-400"></i>
                     <div class="flex-1">
-                        <p class="text-sm text-blue-400">${isUser ? 'You' : 'J.A.R.V.I.S'}</p>
+                        <p class="text-sm text-blue-400">${isUser ? 'You' : 'B.U.D.D.Y'}</p>
                         <p class="text-gray-300">${escapedMessage}</p>
                     </div>
                 </div>
             `;
             responseArea.insertBefore(responseDiv, responseArea.firstChild);
-            
+
             // Play the response using text-to-speech if it's not a user message
             if (!isUser) {
                 playTextToSpeech(message);
@@ -278,10 +462,10 @@
                 voiceControl.classList.add('listening');
                 status.textContent = 'Listening... Speak clearly into your microphone';
                 isListening = true;
-                
+
                 // Add initial feedback
                 addResponse("Listening for your command...", false);
-                
+
                 const response = await fetch('/send_command', {
                     method: 'POST',
                     headers: {
@@ -292,14 +476,14 @@
                         content: null
                     })
                 });
-                
+
                 const data = await response.json();
-                
+
                 // Remove the "Listening..." message
                 if (responseArea.firstChild) {
                     responseArea.removeChild(responseArea.firstChild);
                 }
-                
+
                 if (data.status === 'success') {
                     if (data.requires_input) {
                         // Handle commands that need additional input
