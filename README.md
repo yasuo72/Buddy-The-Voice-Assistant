@@ -69,12 +69,9 @@ python main.py
 <p align="center">
   <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20015013.png" width="30%" alt="Image 4">
   <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20015140.png" width="30%" alt="Image 5">
-  <img src="https://raw.githubusercontent.com/your-username/your-repo/main/images/image6.png" width="30%" alt="Image 6">
+  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20015639.png" width="30%" alt="Image 6">
 </p>
 
-
-![Web Interface](images/web-interface.png)
-https://media-hosting.imagekit.io//ff60d8fcc3ec46f8/Screenshot 2025-03-11 015639.png?Expires=1836246813&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=hn2T7bBHh5lAAirl1PyQnGuq94MFLMwT5dWZk8rs4BaCmF56toxhOASrBeG8EzWqQ5EPh-WUELYnCLAjAn1z3vdXn7bIQnKvh16T80cwYc3hVNl3JOwNqu6Rtl~ag7MS3~q3WMeBlgwQ~4O6NkL7peQPO2jwLEF1jZWyXCB8KNOQZTkfCZPxA~jtw2LaVCsO0H1XlPOXfFQH9hjJ84lg1ncP8XimrWnXiUJo8QUKWg7xO91GZk5HVOSw7FuJuzA2qOUfhwN1q9em6w9g0Ul0aMMlm5Vk980tSk-Sxsu8NLIvsmj1KNxkoxk6XC0wcRqPF5UOLvATwrKQxFeHszT~aA__
 
 The web interface provides:
 - Real-time voice visualization
