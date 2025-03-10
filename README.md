@@ -1,6 +1,6 @@
 <p align="center">
   <img src="https://github.com/yasuo72/assests/blob/main/BUDDY_no_bg.png" width="40%" height="240" >
-  <h>B.U.D.D.Y AI Assistant 🤖</h>
+  <h1>B.U.D.D.Y AI Assistant 🤖</h1>
 </p>
 
 
