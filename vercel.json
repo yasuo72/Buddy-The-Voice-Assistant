@@ -1,20 +1,22 @@
 {
     "version": 2,
     "builds": [
+
         {
-            "src": "wsgi.py",
+            "src": "app.py",
             "use": "@vercel/python"
         }
     ],
     "routes": [
         {
             "src": "/(.*)",
-            "dest": "wsgi.py"
+            "dest": "app.py"
         }
     ],
     "env": {
-        "FLASK_APP": "wsgi.py",
-        "FLASK_ENV": "production",
-        "PYTHONPATH": "."
+    "FLASK_APP": "app.py",
+    "FLASK_ENV": "production",
+    "PYTHON_VERSION": "3.10"
+
     }
-} 
+}

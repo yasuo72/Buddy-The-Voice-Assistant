@@ -65,7 +65,7 @@ except ValueError as e:
 def find_my_ip() -> dict:
     """
     Get detailed IP address information with multiple fallback options.
-    
+
     Returns:
         dict: IP information including address, location, and ISP if available
     """
@@ -150,10 +150,10 @@ def format_ip_info(ip_info: dict) -> str:
 def handle_general_question(query: str) -> str:
     """
     Handle general questions with multiple fallback options.
-    
+
     Args:
         query (str): User's question
-        
+
     Returns:
         str: Response to the question
     """
@@ -315,12 +315,12 @@ def weather_forecast(city: str) -> Tuple[str, float, float, int, float]:
 def send_email(receiver_email: str, subject: str, message: str) -> str:
     """
     Send an email with improved validation and error handling.
-    
+
     Args:
         receiver_email (str): Recipient's email address
         subject (str): Email subject
         message (str): Email content
-        
+
     Returns:
         str: Success message or error description
     """
@@ -405,11 +405,11 @@ def get_stock_price(stock_symbol):
 def get_exchange_rate(base_currency: str, target_currency: str) -> str:
     """
     Get currency exchange rate with improved validation and error handling.
-    
+
     Args:
         base_currency (str): Source currency code (e.g., 'USD')
         target_currency (str): Target currency code (e.g., 'EUR')
-        
+
     Returns:
         str: Formatted exchange rate information
     """
@@ -582,7 +582,7 @@ import requests
 def chat_with_free_gpt(prompt):
     try:
         API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct"
-        headers = {"Authorization": f"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"}  # Get from Hugging Face
+        headers = {"Authorization": ""}  # Get from Hugging Face
 
         response = requests.post(API_URL, headers=headers, json={"inputs": prompt})
         answer = response.json()
@@ -598,7 +598,7 @@ def chat_with_free_gpt(prompt):
 def handle_email_input() -> Tuple[str, str, str]:
     """
     Handle user input for email sending with validation.
-    
+
     Returns:
         Tuple[str, str, str]: receiver_email, subject, message
     """
@@ -646,7 +646,7 @@ def handle_email_input() -> Tuple[str, str, str]:
 def send_email_with_input() -> str:
     """
     Interactive function to send email with user input.
-    
+
     Returns:
         str: Success or error message
     """
@@ -662,7 +662,7 @@ def send_email_with_input() -> str:
 def handle_exchange_rate_input() -> Tuple[str, str]:
     """
     Handle user input for currency exchange rate with validation.
-    
+
     Returns:
         Tuple[str, str]: base_currency, target_currency
     """
@@ -695,7 +695,7 @@ def handle_exchange_rate_input() -> Tuple[str, str]:
 def get_exchange_rate_with_input() -> str:
     """
     Interactive function to get exchange rate with user input.
-    
+
     Returns:
         str: Exchange rate information or error message
     """
@@ -748,10 +748,10 @@ def initial_greeting() -> str:
 def handle_basic_conversation(query: str) -> Optional[str]:
     """
     Handle basic conversational queries with natural responses.
-    
+
     Args:
         query (str): User's input
-        
+
     Returns:
         Optional[str]: Response if query is conversational, None otherwise
     """
@@ -847,10 +847,10 @@ def handle_basic_conversation(query: str) -> Optional[str]:
 def process_command(command: str) -> str:
     """
     Process user commands with improved handling for all features.
-    
+
     Args:
         command (str): User command
-        
+
     Returns:
         str: Response message
     """
