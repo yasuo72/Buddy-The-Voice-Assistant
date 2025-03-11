@@ -1,8 +1,11 @@
-# J.A.R.V.I.S AI Assistant 🤖
+<h1><p align="center">
+  <img src="https://github.com/yasuo72/assests/blob/main/BUDDY_no_bg.png" width="30%" height="190" >
+  <h1>B.U.D.D.Y AI Assistant 🤖</h1>
+</p></h1>
 
-![JARVIS Banner](images/jarvis-banner.png)
 
 A sophisticated voice-controlled AI assistant inspired by Tony Stark's JARVIS, built with Python. This assistant can perform various tasks through voice commands and provides a modern web interface for interaction.
+
 
 ## 🌟 Features
 
@@ -22,8 +25,8 @@ A sophisticated voice-controlled AI assistant inspired by Tony Stark's JARVIS, b
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/jarvis-ai.git
-cd jarvis-ai
+git clone https://github.com/yasuo72/Buddy-The-Voice-Assistent.git
+cd Buddy-ai
 ```
 
 2. Install required packages:
@@ -34,7 +37,7 @@ pip install -r requirements.txt
 3. Set up environment variables in `.env`:
 ```env
 USER=YourName
-BOT=Jarvis
+BOT=BUDDY
 OPENWEATHER_API_KEY=your_api_key
 NEWS_API_KEY=your_api_key
 ```
@@ -55,9 +58,23 @@ python main.py
 - "Generate password"
 - And many more!
 
-## 🖥️ Web Interface
+## 🖥️ Screenshots
 
-![Web Interface](images/web-interface.png)
+
+<h1 align="center">Screenshots</h1>
+
+<p align="center">
+  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20014154.png" width="30%" alt="Image 1">
+  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20014324.png" width="30%" alt="Image 2">
+  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20014704.png" width="30%" alt="Image 3">
+</p>
+
+<p align="center">
+  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20015013.png" width="30%" alt="Image 4">
+  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20015140.png" width="30%" alt="Image 5">
+  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20015639.png" width="30%" alt="Image 6">
+</p>
+
 
 The web interface provides:
 - Real-time voice visualization
@@ -91,8 +108,8 @@ The web interface provides:
 | Feature | Description | Demo |
 |---------|-------------|------|
 | Voice Commands | Natural voice interaction | ![Voice Demo](images/voice-demo.gif) |
-| Weather | Real-time weather updates | ![Weather Demo](images/weather-demo.png) |
-| Email | Voice-controlled email | ![Email Demo](images/email-demo.png) |
+| Weather | Real-time weather updates | ![Weather Demo](https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20015639.png?raw=true) |
+| cripto price | Voice-controlled price | ![Crypto Price](https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20015639.png?raw=true) |
 
 ## 🤝 Contributing
 
@@ -117,8 +134,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Contact
 
-Your Name - [@yourtwitter](https://twitter.com/yourtwitter)
-Project Link: [https://github.com/yourusername/jarvis-ai](https://github.com/yourusername/jarvis-ai)
+Your Name - [@Rohit Singh](https://www.linkedin.com/in/rohit-singh-47b9a0302/)
+Project Link: [https://github.com/yourusername/jarvis-ai](https://github.com/yasuo72/Buddy-The-Voice-Assistent.git)
 
 ---
 ⭐️ Star this repo if you find it helpful! 
