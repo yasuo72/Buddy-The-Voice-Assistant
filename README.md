@@ -1,5 +1,5 @@
 <h1><p align="center">
-  <img src="https://github.com/yasuo72/assests/blob/main/BUDDY_no_bg.png" width="30%" height="190" >
+  <img src="https://github.com/yasuo72/assests/blob/main/BUDDY_no_bg.png" width="40%" height="170" >
   <h1>B.U.D.D.Y AI Assistant 🤖</h1>
 </p></h1>
 
@@ -64,15 +64,15 @@ python main.py
 <h1 align="center">Screenshots</h1>
 
 <p align="center">
-  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20014154.png" width="50%" alt="Image 1">
-  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20014324.png" width="50%" alt="Image 2">
-  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20014704.png" width="50%" alt="Image 3">
+  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20014154.png" width="30%" alt="Image 1">
+  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20014324.png" width="30%" alt="Image 2">
+  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20014704.png" width="30%" alt="Image 3">
 </p>
 
 <p align="center">
-  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20015013.png" width="50%" alt="Image 4">
-  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20015140.png" width="50%" alt="Image 5">
-  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20015639.png" width="50%" alt="Image 6">
+  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20015013.png" width="30%" alt="Image 4">
+  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20015140.png" width="30%" alt="Image 5">
+  <img src="https://github.com/yasuo72/assests/blob/main/Screenshot%202025-03-11%20015639.png" width="30%" alt="Image 6">
 </p>
 
 
